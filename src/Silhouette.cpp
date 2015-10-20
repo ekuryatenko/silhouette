@@ -43,7 +43,7 @@ Vector<Pnt> getNewObject(int startX, int startY){
 
     Queue <Pnt> qWorkingPoints;
     qWorkingPoints.add(currentPoint);
-    image->setRGB(currentPoint.x, currentPoint.y, 1);// repaint point
+    image->setRGB(currentPoint.x, currentPoint.y, 0xffffff);// repaint point
     while(qWorkingPoints.size()>0){
         currentPoint=qWorkingPoints.dequeue(); // take point to work from queue
         res.add(currentPoint);  // add to object vector

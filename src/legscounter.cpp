@@ -17,7 +17,7 @@ bool proportionCheking(auto bwModel, int ySize, int xSize){
         }
     }
     float dx=lastX-firstX+1;
-    if((dx/ySize)>0.5)
+    if((dx/ySize)>0.5) // count proportion
         return false;  // too waiste...
     return true;
 }

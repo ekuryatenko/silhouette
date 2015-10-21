@@ -114,7 +114,10 @@ void destroyBWModel(char **bwModel, int ySize){
 
 int main()
 {
-    sourceFileName = "2-2.jpg";
+    //sourceFileName = "people_rejon_open_clipart.png";
+    sourceFileName = "2-2.jpg"; //
+    //sourceFileName = "st.jpg"; //
+    //sourceFileName = "st2.jpg"; //
 
     image = new GBufferedImage(1000,1000,0);
     image->load(sourceFileName);
@@ -130,6 +133,7 @@ int main()
 
     cout << "Objects found: " << objects.size() << endl;
 
+    int silhouettes=0;
     for(int i=0; i<objects.size();i++){
         auto obj=objects[i];
         int xMin, xMax, yMin, yMax;
@@ -140,19 +144,32 @@ int main()
         if(((double)xSize/ySize)<0.2) //min. proportion thick/height=20%
             continue;
 
+        cout << "Analizing object Nr " << i << " with coords (" << xMin << "-" << yMin << ")-("<<xMax<<"-"<<yMax<<")\n";
+
         // convert object to bw model for better speed analize.
         char **bwModel;
         bwModel=createBWModel(xSize, ySize, obj, xMin, yMin);
 
         // first check - leg's counter
         int legs=countObjLegs(bwModel, ySize, xSize);
-        cout << "Silhouette quantity (from legs): " << (legs+1)/2 << endl;
+        int sil_legs=(legs+1)/2;
+        if(legs<=2) // additional proportion checking for objects
+            if (!proportionCheking(bwModel, ySize, xSize)){ //check max. proportion thick/height=50%
+                cout << "Object don't pass proportion control.\n";
+                continue;
+            }
+        cout << "Silhouette quantity (from legs): " << sil_legs << endl;
 
         // second check - head's counter
 
         // third check - center-mass counter
 
+        // here must be analize block to compare different numbers from our checking
+        silhouettes+=sil_legs;
         destroyBWModel(bwModel, ySize);
     }
+
+    cout << "Total silhouettes: " << silhouettes << endl;
+
     return 0;
 }

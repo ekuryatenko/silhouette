@@ -1,7 +1,26 @@
 #include <iostream>
 #include "gbufferedimage.h"
-#include "gobjects.h"
 using namespace std;
+
+bool proportionCheking(auto bwModel, int ySize, int xSize){
+    // count waist of object
+    int y=ySize/2, firstX=-1, lastX=-1;
+    for(int x=0;x<xSize;x++){
+        if(bwModel[y][x]=='1'){
+            if(firstX==-1){
+                firstX=x;
+                lastX=x;
+                continue;
+            }
+            if(lastX<x)
+                lastX=x;
+        }
+    }
+    float dx=lastX-firstX+1;
+    if((dx/ySize)>0.5)
+        return false;  // too waiste...
+    return true;
+}
 
 int countMassCenters(auto bwModel, int ySize, int xSize){
     double cm[xSize];
@@ -25,15 +44,26 @@ int countMassCenters(auto bwModel, int ySize, int xSize){
             cm[x]+=tmpSum;
         }
     }
+
+//    GBufferedImage *image = new GBufferedImage(xSize,1000,0);
+
+//    GWindow gw;
+//    gw.setCanvasSize(image->getWidth(),image->getHeight());
+//    gw.add(image);
+
     // count first derivative
-    double dcm[xSize]; int dx=10;
+    double dcm[xSize]; int dx=xSize/14+2;
     for(int x=0;x<(xSize-dx);x++){
         double y1=cm[x];
         double y2=cm[x+dx];
         dcm[x]=y2-y1;
+//        image->setRGB(x,cm[x],0xff0000);
+//        image->setRGB(x,dcm[x]+400,0x00ffff);
+//        image->setRGB(x,400,0xffffff);
     }
     // look for siluets
     double sum=dcm[0], oldSum=sum;
+    int quantityRandomPoints=15;
     int counterOfAnotherDirection=0, lastDirection=0;
     int sil=0;
     for(int x=1;x<xSize-dx;x++){
@@ -43,7 +73,7 @@ int countMassCenters(auto bwModel, int ySize, int xSize){
                 lastDirection=1;
             else if(lastDirection==-1){
                 counterOfAnotherDirection++;
-                if(counterOfAnotherDirection==5){
+                if(counterOfAnotherDirection==quantityRandomPoints){
                     counterOfAnotherDirection=0;
                     lastDirection=1;
                 }
@@ -51,7 +81,7 @@ int countMassCenters(auto bwModel, int ySize, int xSize){
         } else {
             if(lastDirection==1)
                 counterOfAnotherDirection++;
-            if(counterOfAnotherDirection==5){
+            if(counterOfAnotherDirection==quantityRandomPoints){
                 counterOfAnotherDirection=0;
                 lastDirection=-1;
                 sil++;
@@ -59,6 +89,8 @@ int countMassCenters(auto bwModel, int ySize, int xSize){
         }
         oldSum=sum;
     }
+    if(sil==0)
+        sil=1; // any object has at less one mass-center.
     return sil;
 }
 
@@ -75,7 +107,7 @@ int countObjLegs(auto bwModel, int ySize, int xSize){
                 while((x<xSize)&&(bwModel[y][x]=='1'))
                     x++;
                 int legWide=x-startX;
-                if(legWide>5) // to narrow (less 5 px) do not count
+                if(legWide>1) // to narrow! (less 1 px) do not count
                     legs++;
             }
             x++;
@@ -83,10 +115,10 @@ int countObjLegs(auto bwModel, int ySize, int xSize){
         if(maxLegs<legs)
             maxLegs=legs;
     }
-    cout << "legs: " << maxLegs << endl;
-    
+
     int mc=countMassCenters(bwModel,ySize,xSize);
-    cout << "mass centers: " << mc << endl;
+    cout << "Silhouettes by mass centers: " << mc << endl;
+    cout << "legs: " << maxLegs << endl;
     
     return maxLegs;
 }
